@@ -189,7 +189,7 @@ void ProcessPathsFromFile(const std::wstring& filePath) {
         std::string fileName = ExtractFilename(path);
         std::string outputPath = out + fileName;
         BuildCompression buildCompression;
-        buildCompression.compression = 0x00000002; 
+        buildCompression.compression = 0x00000000; //0x0000000{compress}//LZ4 2 LZ4HC 3 Uncompressed 0
         buildCompression.idk = 0x00000005;
         buildCompression.level = 0x00000002; 
 
@@ -203,24 +203,27 @@ void ProcessPathsFromFile(const std::wstring& filePath) {
 
         void* z = RecompressAssetBundleAsync_Internal_Injected(il2cppPath, il2cppOut, &buildCompression, 0, &priority);
 
-        while (!GetIsDone(z)) {
+       /* while (!GetIsDone(z)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
+        }*/
 
-        auto humanResult = PrintIl2cppStringContent(z);
-        auto succ = GetResult(z);
-        std::cout << "Finished " << path << " succ: " << (succ ? "true" : "false");
+        //auto humanResult = PrintIl2cppStringContent(z);
+        //auto succ = GetResult(z);
+        std::cout << "Finished " << path << std::endl;
+
+        /*std::cout << "Finished " << path << " succ: " << (succ ? "true" : "false");
         if (humanResult != "NONE") {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         if (!humanResult.empty()) {
             std::cout << " error (NONE if succ): " << humanResult;
         }
-        std::cout << std::endl;
+        std::cout << std::endl;*/
         currentLine++;
     }
     file.close();
     std::cout << " Done All!" << std::endl;
+    std::cout << " Now Wait till items in folder matches total count " << totalLines<<std::endl;
 }
 
 void ProcessAttach() {
