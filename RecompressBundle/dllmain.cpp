@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>  
+#include <conio.h>
 
 #define DO_API(r, n, p) r (*n) p
 
@@ -46,10 +47,12 @@ const char* WaitForUA() {
 }
 
 typedef void* (*RecompressAssetBundleAsync_Internal_Injected_t)(void*, void*, BuildCompression*, uint32_t, Priority*);
+typedef void* (*LoadFromFile_Internal_Injected_t)(void*,unsigned int,unsigned int);
 typedef Il2CppString* (*GetHumanReadableResult_t)(void*);
 typedef bool (*GetIsDone_t)(void*);
 typedef bool (*GetResult_t)(void*);
 RecompressAssetBundleAsync_Internal_Injected_t RecompressAssetBundleAsync_Internal_Injected = nullptr;
+LoadFromFile_Internal_Injected_t LoadFromFileInternal_Injected = nullptr;
 GetHumanReadableResult_t GetHumanReadableResult = nullptr;
 GetIsDone_t GetIsDone = nullptr;
 GetResult_t GetResult = nullptr;
@@ -124,6 +127,7 @@ static std::wstring JoinPath(const std::wstring& dir, const std::wstring& filena
 void init_il2cpp_api() {
 #define DO_API(r, n, p) n = (r (*) p)GetProcAddress(il2cpp_base, #n)
 #include "il2cpp-api-functions.h"
+#include <conio.h>
 #undef DO_API
 }
 std::string PrintIl2cppStringContent(void* z) {
@@ -180,7 +184,7 @@ void ProcessPathsFromFile(const std::wstring& filePath) {
 
     int currentLine = 0;
     std::string path;
-    std::string out = ExtractDirectory(GetModulePath("RecompressBundle.dll")) + "\\recompress\\";
+    std::string out = ExtractDirectory(GetModulePath("LoadBundle.dll")) + "\\recompress\\";
     if (!CreateDirectories(out)) {
         std::cerr << "Failed to create output directory: " << out << std::endl;
         return;
@@ -200,8 +204,9 @@ void ProcessPathsFromFile(const std::wstring& filePath) {
         void* il2cppOut = il2cpp_string_new(outputPath.c_str());
 
         std::cout << "Processing path (" << (currentLine + 1) << "/" << totalLines << "): " << path << std::endl;
-
-        void* z = RecompressAssetBundleAsync_Internal_Injected(il2cppPath, il2cppOut, &buildCompression, 0, &priority);
+        printf("Press any key to paycontinue...");
+        _getch(); // Wait for any key press
+        void* z = LoadFromFileInternal_Injected(il2cppPath,0,0);
 
        /* while (!GetIsDone(z)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -247,12 +252,13 @@ void ProcessAttach() {
     GetIsDone = (GetIsDone_t)il2cpp_resolve_icall("UnityEngine.AsyncOperation::get_isDone");
     GetResult = (GetResult_t)il2cpp_resolve_icall("UnityEngine.AssetBundleRecompressOperation::get_success");
     RecompressAssetBundleAsync_Internal_Injected = (RecompressAssetBundleAsync_Internal_Injected_t)il2cpp_resolve_icall("UnityEngine.AssetBundle::RecompressAssetBundleAsync_Internal_Injected");
+    LoadFromFileInternal_Injected = (LoadFromFile_Internal_Injected_t)il2cpp_resolve_icall("UnityEngine.AssetBundle::LoadFromFile_Internal");
 
     if (!RecompressAssetBundleAsync_Internal_Injected || !GetHumanReadableResult) {
         std::cerr << "Failed to resolve functions" << std::endl;
         return;
     }
-    auto path = GetModulePath(L"RecompressBundle.dll");
+    auto path = GetModulePath(L"LoadBundle.dll");
     ProcessPathsFromFile(JoinPath(ExtractDirectory(path), L"filelist.txt"));
 }
 
